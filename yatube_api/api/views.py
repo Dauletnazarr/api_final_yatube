@@ -9,7 +9,7 @@ from api.serializers import (
     PostSerializer, GroupSerializer, CommentSerializer, FollowSerializer
 )
 from api.permissions import IsAuthorOrReadOnly
-from posts.models import Post, Group, Comment, Follow
+from posts.models import Post, Group, Follow
 
 User = get_user_model()
 
@@ -55,7 +55,7 @@ class FollowViewSet(
         """
         Возвращаем только подписки текущего пользователя.
         """
-        return Follow.objects.filter(user=self.request.user)
+        return self.request.user.followers.all()
 
     def perform_create(self, serializer):
         """
