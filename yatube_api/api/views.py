@@ -59,16 +59,11 @@ class FollowViewSet(
 
     def perform_create(self, serializer):
         """
-        Проверяем подписку и предотвращаем самоподписку или дублирование.
+        Проверяем подписку и предотвращаем самоподписку.
         """
-        following = serializer.validated_data['following']
-        if self.request.user == following:
-            raise serializers.ValidationError(
-                'Вы не можете подписаться на самого себя!')
-
         if Follow.objects.filter(
             user=self.request.user,
-            following=following,
+            following=serializer.validated_data['following'],
         ).exists():
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя!')
@@ -83,16 +78,23 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthorOrReadOnly, IsAuthenticatedOrReadOnly]
 
+    def get_post(self):
+        return get_object_or_404(Post, id=self.kwargs.get('post_id'))
+
     def get_queryset(self):
         """
         Возвращаем комментарии, привязанные к конкретному посту.
         """
-        post = get_object_or_404(Post, id=self.kwargs['post_pk'])
-        return Comment.objects.filter(post=post)
+        post = self.get_post()
+        return post.comments.all()
 
     def perform_create(self, serializer):
         """
         Создаём комментарий, привязанный к посту.
         """
-        post = get_object_or_404(Post, id=self.kwargs['post_pk'])
-        serializer.save(post=post, author=self.request.user)
+        serializer.save(post=self.get_post(), author=self.request.user)
+
+    def partial_update(self, request, *args, **kwargs):
+        print(f"Request data: {request.data}")
+        print(f"KWARGS: {kwargs}")
+        return super().partial_update(request, *args, **kwargs)
