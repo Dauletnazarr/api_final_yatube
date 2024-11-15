@@ -59,15 +59,8 @@ class FollowViewSet(
 
     def perform_create(self, serializer):
         """
-        Проверяем подписку и предотвращаем самоподписку.
+        Создаем запись о подписке.
         """
-        if Follow.objects.filter(
-            user=self.request.user,
-            following=serializer.validated_data['following'],
-        ).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя!')
-
         serializer.save(user=self.request.user)
 
 
@@ -93,8 +86,3 @@ class CommentViewSet(viewsets.ModelViewSet):
         Создаём комментарий, привязанный к посту.
         """
         serializer.save(post=self.get_post(), author=self.request.user)
-
-    def partial_update(self, request, *args, **kwargs):
-        print(f"Request data: {request.data}")
-        print(f"KWARGS: {kwargs}")
-        return super().partial_update(request, *args, **kwargs)
